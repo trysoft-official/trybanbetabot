@@ -3,6 +3,8 @@ from config import token # импорт токена
 
 bot = telebot.TeleBot(token) 
 
+banlist = []
+
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.reply_to(message, "Привет! Я бот для управления чатом.")
@@ -19,6 +21,7 @@ def ban_user(message):
             bot.reply_to(message, "Невозможно забанить администратора.")
         else:
             bot.ban_chat_member(chat_id, user_id) # пользователь с user_id будет забанен в чате с chat_id
+            banlist.append(f"@{message.reply_to_message.from_user.username}")
             bot.reply_to(message, f"Пользователь @{message.reply_to_message.from_user.username} был забанен.")
     else:
         bot.reply_to(message, "Эта команда должна быть использована в ответ на сообщение пользователя, которого вы хотите забанить.")
@@ -31,7 +34,12 @@ def unban_user(message):
     user_id = message.reply_to_message.from_user.id
     user_status = bot.get_chat_member(chat_id, user_id).status 
     bot.unban_chat_member(chat_id, user_id) # пользователь с user_id будет забанен в чате с chat_id
+    banlist.remove(f"@{message.reply_to_message.from_user.username}")
     bot.reply_to(message, f"Пользователь @{message.reply_to_message.from_user.username} был разбанен.")
+
+@bot.message_handler(commands=['banlist'])
+def banlistd(message):
+    bot.reply_to(message, ', '.join(banlist))
 
 
 bot.infinity_polling(none_stop=True)
